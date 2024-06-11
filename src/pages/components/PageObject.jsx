@@ -261,7 +261,7 @@ function PageObject(props) {
       src={src[page]}
       style={{ left: pos.x + camera.CamX, top: pos.y + camera.CamY, transform: `rotate(${rotation}deg)`}}
       ref={objectElement}
-      className="page-object"
+      className={props.className + " page-object" || "page-object"}
       onMouseDown={onClick}
       onMouseEnter={mouseOver}
       onMouseLeave={mouseOut}

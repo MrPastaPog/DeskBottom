@@ -125,6 +125,62 @@ function ContextMenu(props) {
           <ContextMenuComponent text="Lock [L]" callback={() => {document.dispatchEvent(new CustomEvent('lock', {detail: e.target.id}))}}/>
         </>)
         break;
+      case 'dice':
+        setInnerComponents(<>
+                    <ContextMenuComponent text="Scale [Up, Down]" 
+          element={<>
+          <ContextMenuComponent 
+          className="scale" 
+          callback={() => {document.dispatchEvent(new CustomEvent('scaleUp', {detail: e.target.id}))}} 
+          text="+"/>
+          <ContextMenuComponent 
+          className="scale" 
+          callback={() => {document.dispatchEvent(new CustomEvent('scaleDown', {detail: e.target.id}))}} 
+          text="-"/>
+          </>}/>
+
+
+          <ContextMenuComponent text="Layer" 
+          element={<>
+          <ContextMenuComponent 
+          className="layer" 
+          callback={() => {document.dispatchEvent(new CustomEvent('layerUp', {detail: e.target.id}))}} 
+          text="+"/>
+          <ContextMenuComponent 
+          className="layer" 
+          callback={() => {document.dispatchEvent(new CustomEvent('layerDown', {detail: e.target.id}))}} 
+          text="-"/>
+          </>}/>
+
+
+          <ContextMenuComponent text="Rotate [Scroll]" 
+          element={<>
+          <ContextMenuComponent 
+          className="rotate" 
+          callback={() => {document.dispatchEvent(new CustomEvent('rotateClockwise', {detail: e.target.id}))}} 
+          text=">"/>
+          <ContextMenuComponent 
+          className="rotate" 
+          callback={() => {document.dispatchEvent(new CustomEvent('rotateAnticlockwise', {detail: e.target.id}))}} 
+          text="<"/>
+          </>}/>
+          
+
+          <ContextMenuComponent text="Page" 
+          element={<>
+          <ContextMenuComponent 
+          className="page" 
+          callback={() => {document.dispatchEvent(new CustomEvent('pageRight', {detail: e.target.id}))}} 
+          text=">"/>
+          <ContextMenuComponent 
+          className="page" 
+          callback={() => {document.dispatchEvent(new CustomEvent('pageLeft', {detail: e.target.id}))}} 
+          text="<"/>
+          </>}/>
+          <ContextMenuComponent text="Roll [R]" callback={() => {document.dispatchEvent(new CustomEvent('randomPage', {detail: e.target.id}))}} />
+          <ContextMenuComponent text="Lock [L]" callback={() => {document.dispatchEvent(new CustomEvent('lock', {detail: e.target.id}))}}/>
+        </>)
+        break;
       default:
         setPos(null);
         setInnerComponents(null);

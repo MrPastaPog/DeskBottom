@@ -1,10 +1,9 @@
 import ContextMenu from "./components/ContextMenu";
 import Object from "./components/Object";
 import PageObject from "./components/PageObject";
-
+import Dice from "./components/Dice";
 import React, {useState, useEffect, useRef, createContext} from 'react';
 import FixedView from "./components/FixedView";
-import JsxParser from 'react-jsx-parser';
 import makeid from "../makeid";
 
 
@@ -18,28 +17,21 @@ function Game() {
   const cameraOffset = useRef({x: 0, y: 0});
   const cameraFixOffset = useRef({x: 0, y: 0})
   const middleClick = useRef(false);
-  const doogieWoogie = useRef('doogieWoogie');
-  
-  function returnDoogieWoogie() {
-    return doogieWoogie
-  }
+
+
 
 
   function RenderJson(json) {
-
-    
-
     json.map(jsonObject => {
-      console.log(jsonObject)
       let ComponentJsx;
       switch(jsonObject.component) {
         case "Object":
           ComponentJsx = <Object
-          pos={{x: (jsonObject.pos || 0) , y: (jsonObject.pos || 0)}}
+          pos={{x: (jsonObject.pos.x || 0) , y: (jsonObject.pos.y || 0)}}
           src={jsonObject.src} 
           backsrc={jsonObject.backsrc} 
           scale={jsonObject.scale}
-          size={{width: jsonObject.size === undefined ? 0 : jsonObject.size.width, height:jsonObject.size === undefined ? 0 : jsonObject.size.height}}
+          size={{width: jsonObject.size.width || 0, height:jsonObject.size.height || 0}}
           rotation={jsonObject.rotation}
           id={jsonObject.id === undefined ? makeid(10) : jsonObject.id}
           locked={jsonObject.locked}
@@ -49,16 +41,29 @@ function Game() {
           break;
         case "PageObject":
           ComponentJsx = <PageObject
-          pos={{x: (jsonObject.pos || 0) , y: (jsonObject.pos || 0)}}
+          pos={{x: (jsonObject.pos.x || 0) , y: (jsonObject.pos.y || 0)}}
           src={jsonObject.src} 
           page={jsonObject.page}
           scale={jsonObject.scale}
-          size={{width: jsonObject.size === undefined ? 0 : jsonObject.size.width, height:jsonObject.size === undefined ? 0 : jsonObject.size.height}}
+          size={jsonObject.size || 0}
           rotation={jsonObject.rotation}
-          id={jsonObject.id === undefined ? makeid(10) : jsonObject.id}
+          id={jsonObject.id || makeid(10)}
           locked={jsonObject.locked}
           side={jsonObject.side}
-          key={jsonObject.id === undefined ? makeid(10) : jsonObject.id}
+          key={jsonObject.id || makeid(10)}
+          />
+          break;
+        case "Dice":
+          ComponentJsx = <Dice
+          pos={jsonObject.pos || {x: 0, y: 0}}
+          page={jsonObject.page}
+          scale={jsonObject.scale}
+          size={jsonObject.size || 0}
+          rotation={jsonObject.rotation}
+          id={jsonObject.id || makeid(10)}
+          locked={jsonObject.locked}
+          side={jsonObject.side}
+          key={jsonObject.id || makeid(10)}
           />
           break;
       }
@@ -137,7 +142,7 @@ function Game() {
 
   useEffect(() => {
     
-    fetch('./abc.json').then((r) => r.json())
+    fetch('table.json').then((r) => r.json())
     .then((json) => {
       RenderJson(json)
     })

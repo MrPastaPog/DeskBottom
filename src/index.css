@@ -99,3 +99,7 @@
 body {
   margin: 0;
 }
+
+.dice {
+  border-radius: 20px;
+}
