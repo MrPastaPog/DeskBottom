@@ -5,7 +5,8 @@ import makeid from '../../makeid';
 import {Camera} from '../Game'
 
 
-function Object(props) {
+function SplitObject(props) {
+
   const [pos, setPos] = useState(props.pos || { x: 0, y: 0 });
   const [isClicking, setIsClicking] = useState(false);
   const [isCursorHovering, setIsCursorHovering] = useState(false);
@@ -15,8 +16,8 @@ function Object(props) {
   const [src, setSrc] = useState(props.src || 'http://via.placeholder.com/150');
   const [backsrc, setBackSrc] = useState(props.backsrc || 'http://via.placeholder.com/150');
   const [side, setSide] = useState(props.side || 1);
+  
   const [scale, setScale] = useState(props.scale || 1);
-  const [camera, setCamera] = useState({x: 0, y: 0});
   const cameraPos = useRef({x: 0, y: 0});
   const [size, setSize] = useState(props.size || { width: 0, height: 0 });
   const [rotation, setRotation] = useState(props.rotation || 0);
@@ -27,8 +28,14 @@ function Object(props) {
   const scaleRef = useRef(scale);
   
   function onRender(e) {
-    if (size.width !== 0 && size.height !== 0) return;
-    setSize({ width: e.target.naturalWidth, height: e.target.naturalHeight });
+    
+
+    setSize(size => ({ width: e.target.naturalWidth, height: e.target.naturalHeight }));
+
+
+    
+    objectElement.current.style.left = `${pos.x + CameraContext.CamX - ((props.width || e.target.naturalWidth) / props.gridLength.width * props.crop.x)}px`
+    objectElement.current.style.top = `${pos.y + CameraContext.CamY - ((props.height || e.target.naturalHeight) / props.gridLength.height * props.crop.y)}px`
   }
 
   function onClick(e) {
@@ -37,6 +44,7 @@ function Object(props) {
     if (e.button !== 0) return;
     if (isLocked.current) return;
     setIsClicking(true);
+    console.log(pos.x)
     setOffsetX(e.pageX - pos.x);
     setOffsetY(e.pageY - pos.y);
     
@@ -48,7 +56,7 @@ function Object(props) {
       setIsClicking(false);
       return;
     }
-    setPos({ x: e.pageX - offsetX, y: e.pageY - offsetY });
+    setPos({ x: e.pageX - offsetX, y: e.pageY - offsetY});
   }
 
 
@@ -168,6 +176,7 @@ function Object(props) {
   }
   
   useEffect(() => {
+
     document.addEventListener('camera', cameraChange)
     document.addEventListener('fixCamera', fixCamera)
     document.addEventListener('scaleUp', (e) => scaleUp(0.1, e));
@@ -209,6 +218,7 @@ function Object(props) {
   }, []);
 
   useEffect(() => {
+    
     document.addEventListener('mousemove', onDrag);
     document.addEventListener('mouseup', offClick);
     document.addEventListener('flip', flip);
@@ -237,12 +247,23 @@ function Object(props) {
       document.removeEventListener('wheel', onScroll);
     };
   }, [isCursorHovering]);
-
+ 
   return (
     <>
       <img
         src={side === 1 ? src : backsrc}
-        style={{ left: pos.x + CameraContext.CamX, top: pos.y + CameraContext.CamY, transform: `rotate(${rotation}deg)`}}
+        style={{ 
+          left: pos.x + CameraContext.CamX - (size.width / props.gridLength.width * props.crop.x), 
+          top: pos.y + CameraContext.CamY - (size.height / props.gridLength.height* props.crop.y),
+          transform: `rotate(${rotation}deg)`,
+          transformOrigin: `${(size.width / props.gridLength.width) * props.crop.x + (size.width / props.gridLength.width) / 2}px ${(size.height / props.gridLength.height) * props.crop.y + (size.height / props.gridLength.height) / 2}px`,
+          clipPath : `inset(
+            ${size.height / props.gridLength.height * props.crop.y}px 
+            ${size.width / props.gridLength.width * (props.gridLength.width - props.crop.x - 1)}px
+            ${size.height / props.gridLength.height * (props.gridLength.height - props.crop.y - 1)}px
+            ${size.width / props.gridLength.width * props.crop.x}px)`
+        }}
+          
         ref={objectElement}
         className="object"
         onMouseDown={onClick}
@@ -259,4 +280,4 @@ function Object(props) {
   );
 }
 
-export default Object;
+export default SplitObject;

@@ -9,7 +9,6 @@ function Dice(props) {
     rotation={props.rotation}
     id={props.id}
     locked={props.locked}
-    side={props.side}
     key={props.id}
     className='dice'
     />)

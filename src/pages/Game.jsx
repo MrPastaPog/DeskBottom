@@ -5,7 +5,7 @@ import Dice from "./components/Dice";
 import React, {useState, useEffect, useRef, createContext} from 'react';
 import FixedView from "./components/FixedView";
 import makeid from "../makeid";
-
+import SplitObject from "./components/SplitObject";
 
 export const Camera = createContext();
 
@@ -64,6 +64,22 @@ function Game() {
           locked={jsonObject.locked}
           side={jsonObject.side}
           key={jsonObject.id || makeid(10)}
+          />
+          break;
+        case "SplitObject":
+          ComponentJsx = <SplitObject 
+          pos={jsonObject.pos || {x: 0 , y: 0}}
+          src={jsonObject.src} 
+          backsrc={jsonObject.backsrc} 
+          scale={jsonObject.scale}
+          size={jsonObject.size || {"width": 100, "height": 100}}
+          rotation={jsonObject.rotation}
+          id={jsonObject.id || makeid(10)}
+          locked={jsonObject.locked}
+          side={jsonObject.side}
+          key={jsonObject.id || makeid(10)}
+          gridLength={jsonObject.gridLength || {width: 1, height: 1}}
+          crop={jsonObject.crop || {x: 0, y: 0}}
           />
           break;
       }
