@@ -102,13 +102,7 @@ function SplitObject(props) {
       pos.y -= offsetY
       return pos;
     })
-    // const width = size.width;
-    // const height = size.height;
-    // setSize({ width, height });
-    // const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
-    // const offsetX = (currentWidth + amount * width - currentWidth) / 2;
-    // const offsetY = (currentHeight + amount * height - currentHeight) / 2;
-    // setPos(pos => ({ x: pos.x - offsetX, y: pos.y - offsetY }));
+
   }
 
   function scaleDown(amount, e) {
@@ -137,13 +131,7 @@ function SplitObject(props) {
       pos.y += offsetY
       return pos;
     })
-    // const width = size.width;
-    // const height = size.height;
-    // setSize({ width, height });
-    // const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
-    // const offsetX = (currentWidth + amount * width - currentWidth) / 2;
-    // const offsetY = (currentHeight + amount * height - currentHeight) / 2;
-    // setPos(pos => ({ x: pos.x + offsetX, y: pos.y + offsetY }));
+
   }
 
   function fixedViewChange() {
