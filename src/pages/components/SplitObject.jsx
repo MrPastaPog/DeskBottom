@@ -19,7 +19,7 @@ function SplitObject(props) {
   
   const [scale, setScale] = useState(props.scale || 1);
   const cameraPos = useRef({x: 0, y: 0});
-  const [size, setSize] = useState(props.size || { width: 0, height: 0 });
+  const [size, setSize] = useState(props.size === undefined ? {width: props.size.width * props.gridLength.width, height: props.size.height * props.gridLength.height} : { width: 0, height: 0 });
   const [rotation, setRotation] = useState(props.rotation || 0);
   const [fixedView, setFixedView] = useState(false);
   const id = useRef(props.id || makeid(10));
@@ -82,15 +82,33 @@ function SplitObject(props) {
     }
     if (isLocked.current) return;
     if (scaleRef.current >= 3) return;
+    const prevScale = scaleRef.current;
+    const prevCardWidth = prevScale * size.width / props.gridLength.width
+    const prevCardHeight = prevScale * size.height / props.gridLength.height
+    console.log(prevCardWidth)
     scaleRef.current = Math.round((scaleRef.current + amount) * 100) / 100;
+    const cardWidth = scaleRef.current * size.width / props.gridLength.width
+    const cardHeight = scaleRef.current * size.height / props.gridLength.height
+    console.log(cardWidth)
+    const offsetCardWidth = cardWidth - prevCardWidth 
+    const offsetCardHeight = cardHeight - prevCardHeight 
     setScale(scaleRef.current);
-    const width = objectElement.current.naturalWidth;
-    const height = objectElement.current.naturalHeight;
-    setSize({ width, height });
-    const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
-    const offsetX = (currentWidth + amount * width - currentWidth) / 2;
-    const offsetY = (currentHeight + amount * height - currentHeight) / 2;
-    setPos(pos => ({ x: pos.x - offsetX, y: pos.y - offsetY }));
+    setPos(pos => {
+      pos.x -= offsetCardWidth * props.crop.x
+      pos.y -= offsetCardHeight * props.crop.y
+      const offsetX = offsetCardWidth / 2;
+      const offsetY = offsetCardHeight / 2;
+      pos.x -= offsetX
+      pos.y -= offsetY
+      return pos;
+    })
+    // const width = size.width;
+    // const height = size.height;
+    // setSize({ width, height });
+    // const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
+    // const offsetX = (currentWidth + amount * width - currentWidth) / 2;
+    // const offsetY = (currentHeight + amount * height - currentHeight) / 2;
+    // setPos(pos => ({ x: pos.x - offsetX, y: pos.y - offsetY }));
   }
 
   function scaleDown(amount, e) {
@@ -99,15 +117,33 @@ function SplitObject(props) {
     }
     if (isLocked.current) return;
     if (scaleRef.current <= 0.5) return;
+    const prevScale = scaleRef.current;
+    const prevCardWidth = prevScale * size.width / props.gridLength.width
+    const prevCardHeight = prevScale * size.height / props.gridLength.height
+    console.log(prevCardWidth)
     scaleRef.current = Math.round((scaleRef.current - amount) * 100) / 100;
+    const cardWidth = scaleRef.current * size.width / props.gridLength.width
+    const cardHeight = scaleRef.current * size.height / props.gridLength.height
+    console.log(cardWidth)
+    const offsetCardWidth = prevCardWidth - cardWidth
+    const offsetCardHeight = prevCardHeight - cardHeight
     setScale(scaleRef.current);
-    const width = objectElement.current.naturalWidth;
-    const height = objectElement.current.naturalHeight;
-    setSize({ width, height });
-    const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
-    const offsetX = (currentWidth + amount * width - currentWidth) / 2;
-    const offsetY = (currentHeight + amount * height - currentHeight) / 2;
-    setPos(pos => ({ x: pos.x + offsetX, y: pos.y + offsetY }));
+    setPos(pos => {
+      pos.x += offsetCardWidth * props.crop.x
+      pos.y += offsetCardHeight * props.crop.y
+      const offsetX = offsetCardWidth / 2;
+      const offsetY = offsetCardHeight / 2;
+      pos.x += offsetX
+      pos.y += offsetY
+      return pos;
+    })
+    // const width = size.width;
+    // const height = size.height;
+    // setSize({ width, height });
+    // const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
+    // const offsetX = (currentWidth + amount * width - currentWidth) / 2;
+    // const offsetY = (currentHeight + amount * height - currentHeight) / 2;
+    // setPos(pos => ({ x: pos.x + offsetX, y: pos.y + offsetY }));
   }
 
   function fixedViewChange() {
@@ -247,7 +283,7 @@ function SplitObject(props) {
       document.removeEventListener('wheel', onScroll);
     };
   }, [isCursorHovering]);
- 
+
   return (
     <>
       <img
@@ -258,10 +294,10 @@ function SplitObject(props) {
           transform: `rotate(${rotation}deg)`,
           transformOrigin: `${(size.width / props.gridLength.width) * props.crop.x + (size.width / props.gridLength.width) / 2}px ${(size.height / props.gridLength.height) * props.crop.y + (size.height / props.gridLength.height) / 2}px`,
           clipPath : `inset(
-            ${size.height / props.gridLength.height * props.crop.y}px 
-            ${size.width / props.gridLength.width * (props.gridLength.width - props.crop.x - 1)}px
-            ${size.height / props.gridLength.height * (props.gridLength.height - props.crop.y - 1)}px
-            ${size.width / props.gridLength.width * props.crop.x}px)`
+            ${(size.height * scale) / props.gridLength.height * props.crop.y}px 
+            ${(size.width * scale)  / props.gridLength.width * (props.gridLength.width - props.crop.x - 1)}px
+            ${(size.height * scale) / props.gridLength.height * (props.gridLength.height - props.crop.y - 1)}px
+            ${(size.width * scale)  / props.gridLength.width * props.crop.x}px)`
         }}
           
         ref={objectElement}
@@ -270,8 +306,10 @@ function SplitObject(props) {
         onMouseEnter={mouseOver}
         onMouseLeave={mouseOut}
         onLoad={onRender}
-        width={scale * size.width}
-        height={scale * size.height}
+        // width={(size.width / props.gridLength.width * scale) + (props.gridLength.width - 1) * (size.width / props.gridLength.width)}
+        // height={(size.height / props.gridLength.height * scale) + (props.gridLength.height - 1) * (size.height / props.gridLength.height)}
+        width={size.width * scale}
+        height={size.height * scale}
         id={id.current}
       />
       {props.cb}

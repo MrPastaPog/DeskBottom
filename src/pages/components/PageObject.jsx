@@ -74,9 +74,8 @@ function PageObject(props) {
     if(scaleRef.current >= 3) {return;}
     scaleRef.current = Math.round((scaleRef.current + amount) * 100) / 100;
     setScale(scale => scale = scaleRef.current);
-    const width = objectElement.current.naturalWidth 
-    const height = objectElement.current.naturalHeight
-    setSize(size => size = {width: width, height: height}) 
+    const width = size.width 
+    const height = size.height
     const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
     const offsetX = (currentWidth + amount * width - currentWidth) / 2;
     const offsetY = (currentHeight + amount * height - currentHeight) / 2;
@@ -94,9 +93,9 @@ function PageObject(props) {
     if(scaleRef.current <= 0.5) return;
     scaleRef.current = Math.round((scaleRef.current - amount) * 100) / 100;
     setScale(scale => scale = scaleRef.current);
-    const width = objectElement.current.naturalWidth 
-    const height = objectElement.current.naturalHeight
-    setSize(size => size = {width: width, height: height}) 
+    const width = size.width 
+    const height = size.height
+
     const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
     const offsetX = (currentWidth + amount * width - currentWidth) / 2;
     const offsetY = (currentHeight + amount * height - currentHeight) / 2;
@@ -261,7 +260,7 @@ function PageObject(props) {
       src={src[page]}
       style={{ left: pos.x + camera.CamX, top: pos.y + camera.CamY, transform: `rotate(${rotation}deg)`}}
       ref={objectElement}
-      className={props.className + " page-object" || "page-object"}
+      className={props.className === undefined ? "page-object" : props.className + " page-object"}
       onMouseDown={onClick}
       onMouseEnter={mouseOver}
       onMouseLeave={mouseOut}

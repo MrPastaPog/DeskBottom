@@ -76,8 +76,8 @@ function Object(props) {
     if (scaleRef.current >= 3) return;
     scaleRef.current = Math.round((scaleRef.current + amount) * 100) / 100;
     setScale(scaleRef.current);
-    const width = objectElement.current.naturalWidth;
-    const height = objectElement.current.naturalHeight;
+    const width = size.width;
+    const height = size.height;
     setSize({ width, height });
     const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
     const offsetX = (currentWidth + amount * width - currentWidth) / 2;
@@ -93,8 +93,8 @@ function Object(props) {
     if (scaleRef.current <= 0.5) return;
     scaleRef.current = Math.round((scaleRef.current - amount) * 100) / 100;
     setScale(scaleRef.current);
-    const width = objectElement.current.naturalWidth;
-    const height = objectElement.current.naturalHeight;
+    const width = size.width;
+    const height = size.height;
     setSize({ width, height });
     const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
     const offsetX = (currentWidth + amount * width - currentWidth) / 2;
