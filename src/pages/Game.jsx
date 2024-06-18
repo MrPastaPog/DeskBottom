@@ -6,7 +6,8 @@ import React, {useState, useEffect, useRef, createContext} from 'react';
 import FixedView from "./components/FixedView";
 import makeid from "../makeid";
 import SplitObject from "./components/SplitObject";
-
+import ObjectsTouching from "../ObjectsTouching";
+import InsertItemToIndex from "../InsertItemToIndex";
 export const Camera = createContext();
 
 function Game() {
@@ -24,33 +25,36 @@ function Game() {
   function RenderJson(json) {
     json.map(jsonObject => {
       let ComponentJsx;
+      let id = jsonObject.id || makeid(10)
       switch(jsonObject.component) {
         case "Object":
           ComponentJsx = <Object
-          pos={{x: (jsonObject.pos.x || 0) , y: (jsonObject.pos.y || 0)}}
+          pos={jsonObject.pos || {x: 0, y: 0}}
           src={jsonObject.src} 
           backsrc={jsonObject.backsrc} 
           scale={jsonObject.scale}
-          size={{width: jsonObject.size.width || 0, height:jsonObject.size.height || 0}}
+          size={jsonObject.size || {width: 0, height: 0}}
           rotation={jsonObject.rotation}
-          id={jsonObject.id === undefined ? makeid(10) : jsonObject.id}
+          id={id}
           locked={jsonObject.locked}
           side={jsonObject.side}
-          key={jsonObject.id === undefined ? makeid(10) : jsonObject.id}
+          layer={jsonObject.layer}
+          key={id}
           />
           break;
         case "PageObject":
           ComponentJsx = <PageObject
-          pos={{x: (jsonObject.pos.x || 0) , y: (jsonObject.pos.y || 0)}}
+          pos={jsonObject.pos || {x: 0, y: 0}}
           src={jsonObject.src} 
           page={jsonObject.page}
           scale={jsonObject.scale}
-          size={jsonObject.size || 0}
+          size={jsonObject.size || {width: 0, height: 0}}
           rotation={jsonObject.rotation}
-          id={jsonObject.id || makeid(10)}
+          id={id}
           locked={jsonObject.locked}
           side={jsonObject.side}
-          key={jsonObject.id || makeid(10)}
+          layer={jsonObject.layer}
+          key={id}
           />
           break;
         case "Dice":
@@ -58,12 +62,13 @@ function Game() {
           pos={jsonObject.pos || {x: 0, y: 0}}
           page={jsonObject.page}
           scale={jsonObject.scale}
-          size={jsonObject.size || 0}
+          size={jsonObject.size || {width: 0, height: 0}}
           rotation={jsonObject.rotation}
-          id={jsonObject.id || makeid(10)}
+          id={id}
           locked={jsonObject.locked}
           side={jsonObject.side}
-          key={jsonObject.id || makeid(10)}
+          layer={jsonObject.layer}
+          key={id}
           />
           break;
         case "SplitObject":
@@ -71,47 +76,64 @@ function Game() {
           pos={jsonObject.pos || {x: 0 , y: 0}}
           src={jsonObject.src} 
           backsrc={jsonObject.backsrc} 
+          backsplit={jsonObject.backsplit || false}
           scale={jsonObject.scale}
-          size={jsonObject.size || {"width": 100, "height": 100}}
+          size={jsonObject.size || {width: 0, height: 0}}
           rotation={jsonObject.rotation}
-          id={jsonObject.id || makeid(10)}
+          id={id}
           locked={jsonObject.locked}
           side={jsonObject.side}
-          key={jsonObject.id || makeid(10)}
+          layer={jsonObject.layer}
+          key={id}
           gridLength={jsonObject.gridLength || {width: 1, height: 1}}
           crop={jsonObject.crop || {x: 0, y: 0}}
           />
           break;
       }
-      console.log(ComponentJsx)
-      
-        setJsonTable(jsonTable => jsonTable = [...jsonTable, ComponentJsx])
-      
+      setJsonTable(jsonTable => jsonTable = [...jsonTable, ComponentJsx])
     })
   }
   
-
-  function moveLayer(id, direction) {
-    
-    setJsonTable(prevTable => {
-      
-      const index = prevTable.findIndex(component => component.props.id === id );
-      
-      if(prevTable[index].props.locked) return; 
-      console.log(index)
-      if (index === -1) return prevTable;
-      
-      const newTable = [...prevTable];
-      const newIndex = index + direction;
-      if (newIndex < 0 || newIndex > newTable.length - 1) return prevTable;
-      if (newIndex >= 0 && newIndex < newTable.length) {
-        const [movedComponent] = newTable.splice(index, 1);
-        newTable.splice(newIndex, 0, movedComponent);
+  function getTouchingObjectIndices(prevTable, objectIndex, id) {
+    let touchingIndices = [];
+    prevTable.forEach((prevObject) => {
+      if (prevObject.props.id === id) {touchingIndices.push(objectIndex); return;}
+      if (ObjectsTouching(id, prevObject.props.id, prevTable[objectIndex].props.gridLength, prevObject.props.gridLength)) {
+        touchingIndices.push(prevTable.indexOf(prevObject))
       }
-
-      return newTable;
-    });
+    })
+    return touchingIndices
   }
+
+function moveLayer(id, direction) {
+  setJsonTable(prevTable => {
+    let newTable = [...prevTable];
+    const objectIndex = newTable.findIndex(component => component.props.id === id);
+    if (objectIndex === -1) return newTable;
+    const touchingIndices = getTouchingObjectIndices(newTable, objectIndex, id);
+    const touchIndex = touchingIndices.indexOf(objectIndex);
+
+    if (direction === 1) {
+      if (touchIndex + 1 >= touchingIndices.length) return prevTable; // Prevents out of bounds
+      const movement = touchingIndices[touchIndex+1] - touchingIndices[touchIndex];
+      if (objectIndex + movement >= newTable.length) return prevTable; // Prevents out of bounds
+
+      // Swap the elements
+      [newTable[objectIndex], newTable[objectIndex+movement]] = [newTable[objectIndex+movement], newTable[objectIndex]];
+
+      console.log(newTable);
+    } else if (direction === -1) {
+      if (touchIndex - 1 < 0) return prevTable; // Prevents out of bounds
+      const movement = touchingIndices[touchIndex] - touchingIndices[touchIndex-1];
+      if (objectIndex - movement < 0) return prevTable; // Prevents out of bounds
+
+      // Swap the elements
+      [newTable[objectIndex], newTable[objectIndex-movement]] = [newTable[objectIndex-movement], newTable[objectIndex]];
+    }
+
+    return newTable;
+  });
+}
 
   function layerUp(e) {
     const id = e.detail;
@@ -155,13 +177,15 @@ function Game() {
       document.removeEventListener('mouseup', mouseUp)
     }
   })
-
   useEffect(() => {
-    
     fetch('table.json').then((r) => r.json())
     .then((json) => {
       RenderJson(json)
     })
+  }, [])
+  useEffect(() => {
+    
+    
     
     document.addEventListener('layerUp', layerUp)
     document.addEventListener('layerDown', layerDown)
@@ -171,7 +195,7 @@ function Game() {
       document.removeEventListener('layerDown', layerDown)
       
     }
-  }, [])
+  })
 
   return(<>
     <Camera.Provider value={{CamX: cameraX, CamY: cameraY}}>

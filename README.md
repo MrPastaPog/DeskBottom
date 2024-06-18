@@ -1,3 +1,3 @@
 # DeskBottom
 
-A 2d Webrowser BoardGame engine, based off of Tabletop Simulator
+A 2d Webrowser Board Game engine, based off of Tabletop Simulator

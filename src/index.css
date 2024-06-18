@@ -71,18 +71,28 @@
   -ms-user-select: none;
   z-index: 1000;
 }
+.split-fixed-view {
+
+  position: fixed;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  z-index: 1000;
+}
 .fixed-view-button {
   position: fixed;
-  left: 99.5%;
-  top: 8px;
-  background-color: red;
+
+
   border: none;
-  width: 50px;
-  height: 50px;
+  left: 100%;
+  transform: translateX(-100%);
+  background-color: red;
   font-size: 50px;
   text-align: center;
   font-family: DinaRemaster;
-  transform: translateX(-100%);
+
   z-index: 1000;
   -webkit-user-drag: none;
   user-select: none;
@@ -100,6 +110,3 @@ body {
   margin: 0;
 }
 
-.dice {
-  border-radius: 20px;
-}

@@ -90,7 +90,7 @@ function Object(props) {
       if (e.detail !== objectElement.current.id) return;
     }
     if (isLocked.current) return;
-    if (scaleRef.current <= 0.5) return;
+    if (scaleRef.current <= 0.2) return;
     scaleRef.current = Math.round((scaleRef.current - amount) * 100) / 100;
     setScale(scaleRef.current);
     const width = size.width;
@@ -125,7 +125,7 @@ function Object(props) {
       case 'ArrowDown':
         scaleDown(0.1);
         break;
-      case 'Control':
+      case 'Shift':
         fixedViewChange();
         break;
       default:
@@ -163,7 +163,7 @@ function Object(props) {
   }
   function cameraChange(e) {
     let posa = e.detail
-    console.log(pos.x)
+
     setPos({x: posa.x + cameraPos.current.x, y: posa.y + cameraPos.current.y})
   }
   
@@ -254,7 +254,7 @@ function Object(props) {
         id={id.current}
       />
       {props.cb}
-      {fixedView ? <FixedView src={props.src} /> : null}
+      {fixedView ? <FixedView src={props.src} borderRadius={objectElement.current.style.borderRadius}/> : null}
     </>
   );
 }

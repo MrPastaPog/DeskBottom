@@ -4,7 +4,6 @@ import FixedView from './FixedView';
 import makeid from '../../makeid';
 import {Camera} from '../Game'
 
-
 function SplitObject(props) {
 
   const [pos, setPos] = useState(props.pos || { x: 0, y: 0 });
@@ -44,7 +43,6 @@ function SplitObject(props) {
     if (e.button !== 0) return;
     if (isLocked.current) return;
     setIsClicking(true);
-    console.log(pos.x)
     setOffsetX(e.pageX - pos.x);
     setOffsetY(e.pageY - pos.y);
     
@@ -77,19 +75,19 @@ function SplitObject(props) {
   }
 
   function scaleUp(amount, e) {
+    
     if (e !== undefined) {
       if (e.detail !== objectElement.current.id) return;
     }
     if (isLocked.current) return;
     if (scaleRef.current >= 3) return;
+    
     const prevScale = scaleRef.current;
     const prevCardWidth = prevScale * size.width / props.gridLength.width
     const prevCardHeight = prevScale * size.height / props.gridLength.height
-    console.log(prevCardWidth)
     scaleRef.current = Math.round((scaleRef.current + amount) * 100) / 100;
     const cardWidth = scaleRef.current * size.width / props.gridLength.width
     const cardHeight = scaleRef.current * size.height / props.gridLength.height
-    console.log(cardWidth)
     const offsetCardWidth = cardWidth - prevCardWidth 
     const offsetCardHeight = cardHeight - prevCardHeight 
     setScale(scaleRef.current);
@@ -106,19 +104,19 @@ function SplitObject(props) {
   }
 
   function scaleDown(amount, e) {
+    if (scale.width === 0 || scale.height === 0) return;
+    
     if (e !== undefined) {
       if (e.detail !== objectElement.current.id) return;
     }
     if (isLocked.current) return;
-    if (scaleRef.current <= 0.5) return;
+    if (scaleRef.current <= 0.2) return;
     const prevScale = scaleRef.current;
     const prevCardWidth = prevScale * size.width / props.gridLength.width
     const prevCardHeight = prevScale * size.height / props.gridLength.height
-    console.log(prevCardWidth)
     scaleRef.current = Math.round((scaleRef.current - amount) * 100) / 100;
     const cardWidth = scaleRef.current * size.width / props.gridLength.width
     const cardHeight = scaleRef.current * size.height / props.gridLength.height
-    console.log(cardWidth)
     const offsetCardWidth = prevCardWidth - cardWidth
     const offsetCardHeight = prevCardHeight - cardHeight
     setScale(scaleRef.current);
@@ -157,7 +155,7 @@ function SplitObject(props) {
       case 'ArrowDown':
         scaleDown(0.1);
         break;
-      case 'Control':
+      case 'Shift':
         fixedViewChange();
         break;
       default:
@@ -195,16 +193,33 @@ function SplitObject(props) {
   }
   function cameraChange(e) {
     let posa = e.detail
-    console.log(pos.x)
     setPos({x: posa.x + cameraPos.current.x, y: posa.y + cameraPos.current.y})
   }
   
+  function eventListenerScaleUp(e) {
+    scaleUp(0.1, e)
+  }
+  function eventListenerScaleDown(e) {
+    scaleDown(0.1, e)
+  }
+
   useEffect(() => {
 
     document.addEventListener('camera', cameraChange)
     document.addEventListener('fixCamera', fixCamera)
-    document.addEventListener('scaleUp', (e) => scaleUp(0.1, e));
-    document.addEventListener('scaleDown', (e) => scaleDown(0.1, e));
+    document.addEventListener('scaleUp', eventListenerScaleUp);
+    document.addEventListener('scaleDown', eventListenerScaleDown);
+    
+    return () => {
+      document.removeEventListener('camera', cameraChange)
+      document.removeEventListener('fixCamera', fixCamera)
+      document.removeEventListener('scaleUp', eventListenerScaleUp);
+      document.removeEventListener('scaleDown', eventListenerScaleDown);
+      
+    };
+  }, [isCursorHovering]);
+
+  useEffect(() => {
     document.addEventListener('rotateClockwise', (e) => {
       if (e !== undefined) {
         if (e.detail !== objectElement.current.id) return;
@@ -220,10 +235,6 @@ function SplitObject(props) {
       setRotation(rotation => (rotation === 0 ? 345 : rotation - 15));
     });
     return () => {
-      document.removeEventListener('camera', cameraChange)
-      document.removeEventListener('fixCamera', fixCamera)
-      document.removeEventListener('scaleUp', (e) => scaleUp(0.1, e));
-      document.removeEventListener('scaleDown', (e) => scaleDown(0.1, e));
       document.removeEventListener('rotateClockwise', (e) => {
         if (e !== undefined) {
           if (e.detail !== objectElement.current.id) return;
@@ -238,8 +249,8 @@ function SplitObject(props) {
         if (isLocked.current) return;
         setRotation(rotation => (rotation === 0 ? 345 : rotation - 15));
       });
-    };
-  }, []);
+    }
+  }, [])
 
   useEffect(() => {
     
@@ -271,7 +282,6 @@ function SplitObject(props) {
       document.removeEventListener('wheel', onScroll);
     };
   }, [isCursorHovering]);
-
   return (
     <>
       <img
@@ -280,12 +290,14 @@ function SplitObject(props) {
           left: pos.x + CameraContext.CamX - (size.width / props.gridLength.width * props.crop.x), 
           top: pos.y + CameraContext.CamY - (size.height / props.gridLength.height* props.crop.y),
           transform: `rotate(${rotation}deg)`,
-          transformOrigin: `${(size.width / props.gridLength.width) * props.crop.x + (size.width / props.gridLength.width) / 2}px ${(size.height / props.gridLength.height) * props.crop.y + (size.height / props.gridLength.height) / 2}px`,
+          transformOrigin: 
+          `${((size.width * scale) / props.gridLength.width) * props.crop.x + ((size.width * scale) / props.gridLength.width) / 2}px 
+          ${((size.height * scale) / props.gridLength.height) * props.crop.y + ((size.height * scale) / props.gridLength.height) / 2}px`,
           clipPath : `inset(
-            ${(size.height * scale) / props.gridLength.height * props.crop.y}px 
-            ${(size.width * scale)  / props.gridLength.width * (props.gridLength.width - props.crop.x - 1)}px
-            ${(size.height * scale) / props.gridLength.height * (props.gridLength.height - props.crop.y - 1)}px
-            ${(size.width * scale)  / props.gridLength.width * props.crop.x}px)`
+            ${props.crop.y / props.gridLength.height * 100}% 
+            ${100 / props.gridLength.width * (props.gridLength.width - props.crop.x - 1)}%
+            ${100 / props.gridLength.height * (props.gridLength.height - props.crop.y - 1)}%
+            ${props.crop.x / props.gridLength.width * 100}%)`
         }}
           
         ref={objectElement}
@@ -294,14 +306,24 @@ function SplitObject(props) {
         onMouseEnter={mouseOver}
         onMouseLeave={mouseOut}
         onLoad={onRender}
-        // width={(size.width / props.gridLength.width * scale) + (props.gridLength.width - 1) * (size.width / props.gridLength.width)}
-        // height={(size.height / props.gridLength.height * scale) + (props.gridLength.height - 1) * (size.height / props.gridLength.height)}
         width={size.width * scale}
         height={size.height * scale}
         id={id.current}
       />
       {props.cb}
-      {fixedView ? <FixedView src={props.src} /> : null}
+      {fixedView ? <FixedView 
+      src={props.src} 
+      split={true} 
+      gridLengthWidth={props.gridLength.width} 
+      gridLengthHeight={props.gridLength.height}
+      cropX={props.crop.x}
+      cropY={props.crop.y} 
+      borderRadius={objectElement.current.style.borderRadius}
+      inset={{
+        top: props.crop.y / props.gridLength.height * 100, 
+        right: 100 / props.gridLength.width * (props.gridLength.width - props.crop.x - 1),
+        bottom: 100 / props.gridLength.height * (props.gridLength.height - props.crop.y - 1),
+        left: props.crop.x / props.gridLength.width * 100}}/> : null}
     </>
   );
 }

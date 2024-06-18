@@ -90,7 +90,7 @@ function PageObject(props) {
       if(e.detail !== objectElement.current.id) return;
     }
     if(isLocked.current) return;
-    if(scaleRef.current <= 0.5) return;
+    if(scaleRef.current <= 0.2) return;
     scaleRef.current = Math.round((scaleRef.current - amount) * 100) / 100;
     setScale(scale => scale = scaleRef.current);
     const width = size.width 
@@ -141,7 +141,7 @@ function PageObject(props) {
       case 'l': lock(); break;
       case 'ArrowUp': scaleUp(0.1); break;
       case 'ArrowDown': scaleDown(0.1); break;
-      case 'Control': fixedViewChange(); break;
+      case 'Shift': fixedViewChange(); break;
       case 'r': randomPage(); break;
 
     }
@@ -171,13 +171,8 @@ function PageObject(props) {
 
 
 
-  useEffect(() => console.log(camera), [camera])
-
   useEffect(() => {
     
-
-    document.addEventListener('scaleUp', (e) => scaleUp(0.1, e));
-    document.addEventListener('scaleDown', (e) => scaleDown(0.1, e));
     document.addEventListener('rotateClockwise', (e) => {
       if(e !== undefined) {
         if(e.detail !== objectElement.current.id) return;
@@ -194,8 +189,7 @@ function PageObject(props) {
     })
     return () => {
 
-      document.removeEventListener('scaleUp', (e) => scaleUp(0.1, e));
-      document.removeEventListener('scaleDown', (e) => scaleDown(0.1, e));
+      
       document.removeEventListener('rotateClockwise', (e) => {
         if(e !== undefined) {
           if(e.detail !== objectElement.current.id) return;
@@ -236,9 +230,11 @@ function PageObject(props) {
     };
   }, [isClicking]);
 
-
+  
 
   useEffect(() => {
+    document.addEventListener('scaleUp', (e) => scaleUp(0.1, e));
+    document.addEventListener('scaleDown', (e) => scaleDown(0.1, e));
     document.addEventListener('keydown', keyPress)
     document.addEventListener('wheel', onScroll)
     objectElement.current.style.border = isCursorHovering ? 
@@ -252,13 +248,14 @@ function PageObject(props) {
     return () => {
       document.removeEventListener('keydown', keyPress);
       document.removeEventListener('wheel', onScroll);
+      document.removeEventListener('scaleUp', (e) => scaleUp(0.1, e));
+      document.removeEventListener('scaleDown', (e) => scaleDown(0.1, e));
     }
   }, [isCursorHovering])
-
   return (<>
     <img
       src={src[page]}
-      style={{ left: pos.x + camera.CamX, top: pos.y + camera.CamY, transform: `rotate(${rotation}deg)`}}
+      style={{ left: pos.x + camera.CamX, top: pos.y + camera.CamY, transform: `rotate(${rotation}deg)`, borderRadius: props.borderRadius || 'none'}}
       ref={objectElement}
       className={props.className === undefined ? "page-object" : props.className + " page-object"}
       onMouseDown={onClick}
@@ -270,7 +267,7 @@ function PageObject(props) {
       id={id.current}
     />
     
-    {fixedView ? <FixedView src={props.src[page]}></FixedView> : null}
+    {fixedView ? <FixedView src={props.src[page]} borderRadius={objectElement.current.style.borderRadius}></FixedView> : null}
   </>);
 } 
 export default PageObject
