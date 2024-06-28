@@ -6,6 +6,7 @@ import React, {useState, useEffect, useRef, createContext} from 'react';
 import FixedView from "./components/FixedView";
 import makeid from "../makeid";
 import SplitObject from "./components/SplitObject";
+import PageSplitObject from "./components/PageSplitObject";
 import ObjectsTouching from "../ObjectsTouching";
 import InsertItemToIndex from "../InsertItemToIndex";
 
@@ -72,6 +73,24 @@ function Game() {
           break;
         case "SplitObject":
           ComponentJsx = <SplitObject 
+          pos={jsonObject.pos || {x: 0 , y: 0}}
+          src={jsonObject.src} 
+          backSrc={jsonObject.backSrc} 
+          backsplit={jsonObject.backsplit || false}
+          scale={jsonObject.scale}
+          size={jsonObject.size || {width: 0, height: 0}}
+          rotation={jsonObject.rotation}
+          locked={jsonObject.locked}
+          side={jsonObject.side}
+          layer={jsonObject.layer}
+          id={id}
+          key={id}
+          gridLength={jsonObject.gridLength || {width: 1, height: 1}}
+          crop={jsonObject.crop || {x: 0, y: 0}}
+          />
+          break;
+        case "PageSplitObject":
+          ComponentJsx = <PageSplitObject
           pos={jsonObject.pos || {x: 0 , y: 0}}
           src={jsonObject.src} 
           backSrc={jsonObject.backSrc} 

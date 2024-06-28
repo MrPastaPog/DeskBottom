@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import splitImage from '../../SplitImage';
+import {splitImage} from '../../SplitImage';
 import FixedView from './FixedView';
 import makeid from '../../makeid';
 import {Camera} from '../Game'

@@ -1,0 +1,280 @@
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import makeid from '../../makeid';
+import FixedView from './FixedView';
+import {SplitImagePage, splitImage} from '../../SplitImage';
+import { Camera } from '../Game';
+
+function PageSplitObject(props) {
+  const [pos, setPos] = useState(props.pos || { x: 0, y: 0 });
+  const [isClicking, setIsClicking] = useState(false);
+  const [isCursorHovering, setIsCursorHovering] = useState(false);
+  const [offsetX, setOffsetX] = useState(0)
+  const [offsetY, setOffsetY] = useState(0);
+  const camera = useContext(Camera);
+  const [src, setSrc] = useState([]);
+  const [page, setPage] = useState(props.page || 0)
+  const [scale, setScale] = useState(props.scale || 1);
+  const [size, setSize] = useState(size => size = props.size || {width: 0, height: 0});
+  const [rotation, setRotation] = useState(props.rotation || 0);
+  const [fixedView, setFixedView] = useState(false);
+  const id = useRef(props.id || makeid(10));
+  const isLocked = useRef(props.locked || false);
+  const objectElement = useRef();
+  const scaleRef = useRef(scale);
+
+  function onRender(e) {
+    if(size.width !== 0 && size.height !== 0) return;
+    setSize({width: e.target.naturalWidth, height: e.target.naturalHeight})
+  }
+
+  function onClick(e) {
+    e.preventDefault();
+    
+    if(e.button === 0) {
+      if(isLocked.current) return;
+      setIsClicking(true);
+      setOffsetX(e.pageX - pos.x);
+      setOffsetY(e.pageY - pos.y);
+    } 
+    
+  }
+
+
+  function onDrag(e) {
+
+      if(isLocked.current) return;
+      if (!isClicking || e.buttons === 0) {
+        setIsClicking(false);
+        return;
+      }
+      setPos({ x: e.pageX - offsetX, y: e.pageY - offsetY });
+    
+  }
+
+  function offClick(e) {
+
+    if (e.button === 0) {
+      setIsClicking(false);
+    }
+  }
+
+  function mouseOver() {
+    setIsCursorHovering(true)
+  }
+
+  function mouseOut() {
+    setIsCursorHovering(false)
+  }
+  
+  function scaleUp(amount, e) { 
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    if(isLocked.current) return;
+    if(scaleRef.current >= 3) {return;}
+    scaleRef.current = Math.round((scaleRef.current + amount) * 100) / 100;
+    setScale(scale => scale = scaleRef.current);
+    const width = size.width 
+    const height = size.height
+    const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
+    const offsetX = (currentWidth + amount * width - currentWidth) / 2;
+    const offsetY = (currentHeight + amount * height - currentHeight) / 2;
+    setPos(pos => {
+      pos = {x: pos.x - offsetX, y: pos.y - offsetY}
+      return pos;
+    })
+  }
+
+  function scaleDown(amount, e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    if(isLocked.current) return;
+    if(scaleRef.current <= 0.2) return;
+    scaleRef.current = Math.round((scaleRef.current - amount) * 100) / 100;
+    setScale(scale => scale = scaleRef.current);
+    const width = size.width 
+    const height = size.height
+
+    const [currentWidth, currentHeight] = [scaleRef.current * width, scaleRef.current * height];
+    const offsetX = (currentWidth + amount * width - currentWidth) / 2;
+    const offsetY = (currentHeight + amount * height - currentHeight) / 2;
+    setPos(pos => {
+      pos = {x: pos.x + offsetX, y: pos.y + offsetY}
+      return pos;
+    })
+  }
+
+  function changePage(index) {
+    
+    setPage(prevPage => {
+      if(index >= src.length) return prevPage;
+      if(index < 0) return prevPage;
+      return index;
+    })
+  }
+
+  function pageLeft(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    setPage(prevPage => (prevPage - 1 + props.gridLength.width * props.gridLength.height) % props.gridLength.width * props.gridLength.height);
+  }
+
+  function pageRight(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    setPage(prevPage => (prevPage + 1) % props.gridLength.width * props.gridLength.height);
+  }
+
+  function fixedViewChange() {
+    setFixedView(fixedView => !fixedView)
+  }
+  function fixedViewClose() {
+    setFixedView(fixedView => false);
+  }
+
+  function randomPage(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    setPage(page => Math.floor(Math.random() * src.length))
+  }
+
+  function keyPress(e) {
+    if(!isCursorHovering) return;
+    switch(e.key) {
+      case 'ArrowLeft': pageLeft(); break;
+      case 'ArrowRight': pageRight(); break;
+      case 'l': lock(); break;
+      case 'ArrowUp': scaleUp(0.1); break;
+      case 'ArrowDown': scaleDown(0.1); break;
+      case 'Shift': fixedViewChange(); break;
+      case 'r': randomPage(); break;
+
+    }
+    if(!isNaN(Number(e.key))) {
+      changePage(Number(e.key) - 1)
+    }
+  }
+
+  function onScroll(e) {
+    
+    if(isLocked.current) return;
+    if(!isCursorHovering) return;
+    const scrollUp = e.deltaY < 0;
+    scrollUp ? 
+    setRotation(rotation => rotation = rotation === 360 ? 15 : rotation + 15)
+      : 
+    setRotation(rotation => rotation = rotation === 0 ? 345 : rotation - 15)
+  }
+
+  function lock(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    isLocked.current = !isLocked.current
+    objectElement.current.style.border = isLocked.current ? '2px solid red' : 'None';
+  }
+
+  function rotateClockwise(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    if(isLocked.current) return;
+    setRotation(rotation => rotation = rotation === 360 ? 15 : rotation + 15)
+  }
+
+  function rotateAnticlockwise(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
+    if(isLocked.current) return;
+    setRotation(rotation => rotation = rotation === 0 ? 345 : rotation - 15)
+  }
+  
+  useEffect(() => {
+
+    SplitImagePage(props.src, props.gridLength.height, props.gridLength.width, (pieces) => {
+      setSrc(pieces)
+      console.log(pieces)
+    })
+    console.log(id)
+    document.addEventListener('rotateClockwise', rotateClockwise)
+    document.addEventListener('rotateAnticlockwise', rotateAnticlockwise)
+    return () => {
+      document.removeEventListener('rotateClockwise', rotateClockwise)
+      document.removeEventListener('rotateAnticlockwise', rotateAnticlockwise)
+    }
+  }, [])
+
+    
+
+  useEffect(() => {
+    
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', offClick);
+    document.addEventListener('pageLeft', pageLeft);
+    document.addEventListener('pageRight', pageRight);
+    document.addEventListener('lock', lock);
+    document.addEventListener('closeFixedView', fixedViewClose)
+    document.addEventListener('randomPage', randomPage);
+    return () => {
+      
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', offClick);
+      document.removeEventListener('pageLeft', pageLeft);
+      document.removeEventListener('pageRight', pageRight);
+      document.removeEventListener('lock', lock);
+      document.removeEventListener('closeFixedView', fixedViewClose)
+      document.removeEventListener('randomPage', randomPage);
+    };
+  }, [isClicking]);
+
+  function scaleUpContextMenu(e) {
+    scaleUp(0.1, e);
+  }
+  function scaleDownContextMenu(e) {
+    scaleDown(0.1, e);
+  }
+
+  useEffect(() => {
+    document.addEventListener('scaleUp', scaleUpContextMenu);
+    document.addEventListener('scaleDown', scaleDownContextMenu);
+    document.addEventListener('keydown', keyPress)
+    document.addEventListener('wheel', onScroll)
+    objectElement.current.style.border = isCursorHovering ? 
+      isLocked.current ? 
+        '2px solid red' 
+        : 
+        'None' 
+      : 
+      'None';
+
+    return () => {
+      document.removeEventListener('keydown', keyPress);
+      document.removeEventListener('wheel', onScroll);
+      document.removeEventListener('scaleUp', scaleUpContextMenu);
+      document.removeEventListener('scaleDown', scaleDownContextMenu);
+    }
+  }, [isCursorHovering])
+  return (<>
+    <img
+      src={src[page]}
+      style={{ left: pos.x + camera.CamX, top: pos.y + camera.CamY, transform: `rotate(${rotation}deg)`, borderRadius: props.borderRadius * scale + "px" || "none"}}
+      ref={objectElement}
+      className={props.className === undefined ? "page-split-object" : props.className + " page-split-object"}
+      onMouseDown={onClick}
+      onMouseEnter={mouseOver}
+      onMouseLeave={mouseOut}
+      onLoad={onRender}
+      width={scale * size.width}
+      height={scale * size.height}
+      id={id.current}
+    />
+    
+    {fixedView ? <FixedView src={props.src[page]} borderRadius={objectElement.current.style.borderRadius}></FixedView> : null}
+  </>);
+}
+export default PageSplitObject

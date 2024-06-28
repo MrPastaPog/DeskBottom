@@ -1,4 +1,4 @@
-.object, .page-object, .split-object {
+.object, .page-object, .split-object, .page-split-object {
   -webkit-user-drag: none;
   user-select: none;
   -moz-user-select: none;
@@ -89,10 +89,12 @@
   left: 100%;
   transform: translateX(-100%);
   background-color: red;
-  font-size: 50px;
+  font-size: clamp(2vw, 2rem, 2vw);
+  
   text-align: center;
   font-family: DinaRemaster;
-
+  height: 4%;
+  width: 10%;
   z-index: 1000;
   -webkit-user-drag: none;
   user-select: none;
