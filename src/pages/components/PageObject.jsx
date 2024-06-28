@@ -114,11 +114,17 @@ function PageObject(props) {
     })
   }
 
-  function pageLeft() {
+  function pageLeft(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
     setPage(prevPage => (prevPage - 1 + src.length) % src.length);
   }
 
-  function pageRight() {
+  function pageRight(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
     setPage(prevPage => (prevPage + 1) % src.length);
   }
 
@@ -129,7 +135,10 @@ function PageObject(props) {
     setFixedView(fixedView => false);
   }
 
-  function randomPage() {
+  function randomPage(e) {
+    if(e !== undefined) {
+      if(e.detail !== objectElement.current.id) return;
+    }
     setPage(page => Math.floor(Math.random() * src.length))
   }
 
@@ -172,7 +181,6 @@ function PageObject(props) {
 
 
   useEffect(() => {
-    
     document.addEventListener('rotateClockwise', (e) => {
       if(e !== undefined) {
         if(e.detail !== objectElement.current.id) return;
@@ -188,8 +196,6 @@ function PageObject(props) {
       setRotation(rotation => rotation = rotation === 0 ? 345 : rotation - 15)
     })
     return () => {
-
-      
       document.removeEventListener('rotateClockwise', (e) => {
         if(e !== undefined) {
           if(e.detail !== objectElement.current.id) return;
@@ -255,7 +261,7 @@ function PageObject(props) {
   return (<>
     <img
       src={src[page]}
-      style={{ left: pos.x + camera.CamX, top: pos.y + camera.CamY, transform: `rotate(${rotation}deg)`, borderRadius: props.borderRadius || 'none'}}
+      style={{ left: pos.x + camera.CamX, top: pos.y + camera.CamY, transform: `rotate(${rotation}deg)`, borderRadius: props.borderRadius * scale + 'px' || 'none'}}
       ref={objectElement}
       className={props.className === undefined ? "page-object" : props.className + " page-object"}
       onMouseDown={onClick}

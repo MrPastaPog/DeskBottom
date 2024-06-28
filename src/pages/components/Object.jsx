@@ -13,7 +13,7 @@ function Object(props) {
   const [offsetY, setOffsetY] = useState(0);
   const CameraContext = useContext(Camera);
   const [src, setSrc] = useState(props.src || 'http://via.placeholder.com/150');
-  const [backsrc, setBackSrc] = useState(props.backsrc || 'http://via.placeholder.com/150');
+  const [backSrc, setBackSrc] = useState(props.backSrc || 'http://via.placeholder.com/150');
   const [side, setSide] = useState(props.side || 1);
   const [scale, setScale] = useState(props.scale || 1);
   const [camera, setCamera] = useState({x: 0, y: 0});
@@ -241,10 +241,10 @@ function Object(props) {
   return (
     <>
       <img
-        src={side === 1 ? src : backsrc}
+        src={side === 1 ? src : backSrc}
         style={{ left: pos.x + CameraContext.CamX, top: pos.y + CameraContext.CamY, transform: `rotate(${rotation}deg)`}}
+        className={props.className === undefined ? "object" : props.className + " object"}
         ref={objectElement}
-        className="object"
         onMouseDown={onClick}
         onMouseEnter={mouseOver}
         onMouseLeave={mouseOut}

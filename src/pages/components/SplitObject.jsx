@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-
+import splitImage from '../../SplitImage';
 import FixedView from './FixedView';
 import makeid from '../../makeid';
 import {Camera} from '../Game'
@@ -12,10 +12,9 @@ function SplitObject(props) {
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
   const CameraContext = useContext(Camera);
-  const [src, setSrc] = useState(props.src || 'http://via.placeholder.com/150');
-  const [backsrc, setBackSrc] = useState(props.backsrc || 'http://via.placeholder.com/150');
+  const [src, setSrc] = useState();
+  const [backSrc, setBackSrc] = useState();
   const [side, setSide] = useState(props.side || 1);
-  
   const [scale, setScale] = useState(props.scale || 1);
   const cameraPos = useRef({x: 0, y: 0});
   const [size, setSize] = useState(props.size === undefined ? {width: props.size.width * props.gridLength.width, height: props.size.height * props.gridLength.height} : { width: 0, height: 0 });
@@ -27,14 +26,8 @@ function SplitObject(props) {
   const scaleRef = useRef(scale);
   
   function onRender(e) {
-    
 
     setSize(size => ({ width: e.target.naturalWidth, height: e.target.naturalHeight }));
-
-
-    
-    objectElement.current.style.left = `${pos.x + CameraContext.CamX - ((props.width || e.target.naturalWidth) / props.gridLength.width * props.crop.x)}px`
-    objectElement.current.style.top = `${pos.y + CameraContext.CamY - ((props.height || e.target.naturalHeight) / props.gridLength.height * props.crop.y)}px`
   }
 
   function onClick(e) {
@@ -143,23 +136,11 @@ function SplitObject(props) {
   function keyPress(e) {
     if (!isCursorHovering) return;
     switch (e.key) {
-      case 'f':
-        flip();
-        break;
-      case 'l':
-        lock();
-        break;
-      case 'ArrowUp':
-        scaleUp(0.1);
-        break;
-      case 'ArrowDown':
-        scaleDown(0.1);
-        break;
-      case 'Shift':
-        fixedViewChange();
-        break;
-      default:
-        break;
+      case 'f': flip(); break;
+      case 'l': lock(); break;
+      case 'ArrowUp': scaleUp(0.1); break;
+      case 'ArrowDown': scaleDown(0.1); break;
+      case 'Shift': fixedViewChange(); break;
     }
   }
 
@@ -219,36 +200,38 @@ function SplitObject(props) {
     };
   }, [isCursorHovering]);
 
+  function rotateClockwise(e) {
+    if (e !== undefined) {
+      if (e.detail !== objectElement.current.id) return;
+    }
+    if (isLocked.current) return;
+    setRotation(rotation => (rotation === 360 ? 15 : rotation + 15));
+  }
+  function rotateAnticlockwise(e) {
+    if (e !== undefined) {
+      if (e.detail !== objectElement.current.id) return;
+    }
+    if (isLocked.current) return;
+    setRotation(rotation => (rotation === 0 ? 345 : rotation - 15));
+  } 
+
   useEffect(() => {
-    document.addEventListener('rotateClockwise', (e) => {
-      if (e !== undefined) {
-        if (e.detail !== objectElement.current.id) return;
-      }
-      if (isLocked.current) return;
-      setRotation(rotation => (rotation === 360 ? 15 : rotation + 15));
-    });
-    document.addEventListener('rotateAnticlockwise', (e) => {
-      if (e !== undefined) {
-        if (e.detail !== objectElement.current.id) return;
-      }
-      if (isLocked.current) return;
-      setRotation(rotation => (rotation === 0 ? 345 : rotation - 15));
-    });
+    console.log(props.crop, props.gridLength)
+    splitImage(props.src || "https://dummyimage.com/150x150/eeeeff/000000.png&text=placeholder", props.gridLength.height, props.gridLength.width, (pieces) => {
+      setSrc(pieces[props.crop.y][props.crop.x])
+    })
+    if (props.backSplit) {
+      splitImage(props.backSrc || "https://dummyimage.com/150x150/eeeeff/000000.png&text=placeholder", props.gridLength.height, props.gridLength.width, (pieces) => {
+        setBackSrc(pieces[props.crop.y][props.crop.x])
+      })
+    } else {
+      setBackSrc(props.backSrc)
+    }
+    document.addEventListener('rotateClockwise', rotateClockwise);
+    document.addEventListener('rotateAnticlockwise', rotateAnticlockwise);
     return () => {
-      document.removeEventListener('rotateClockwise', (e) => {
-        if (e !== undefined) {
-          if (e.detail !== objectElement.current.id) return;
-        }
-        if (isLocked.current) return;
-        setRotation(rotation => (rotation === 360 ? 15 : rotation + 15));
-      });
-      document.removeEventListener('rotateAnticlockwise', (e) => {
-        if (e !== undefined) {
-          if (e.detail !== objectElement.current.id) return;
-        }
-        if (isLocked.current) return;
-        setRotation(rotation => (rotation === 0 ? 345 : rotation - 15));
-      });
+      document.removeEventListener('rotateClockwise', rotateClockwise);
+      document.removeEventListener('rotateAnticlockwise', rotateAnticlockwise);
     }
   }, [])
 
@@ -285,23 +268,14 @@ function SplitObject(props) {
   return (
     <>
       <img
-        src={side === 1 ? src : backsrc}
+        src={side === 1 ? src : backSrc}
         style={{ 
-          left: pos.x + CameraContext.CamX - (size.width / props.gridLength.width * props.crop.x), 
-          top: pos.y + CameraContext.CamY - (size.height / props.gridLength.height* props.crop.y),
-          transform: `rotate(${rotation}deg)`,
-          transformOrigin: 
-          `${((size.width * scale) / props.gridLength.width) * props.crop.x + ((size.width * scale) / props.gridLength.width) / 2}px 
-          ${((size.height * scale) / props.gridLength.height) * props.crop.y + ((size.height * scale) / props.gridLength.height) / 2}px`,
-          clipPath : `inset(
-            ${props.crop.y / props.gridLength.height * 100}% 
-            ${100 / props.gridLength.width * (props.gridLength.width - props.crop.x - 1)}%
-            ${100 / props.gridLength.height * (props.gridLength.height - props.crop.y - 1)}%
-            ${props.crop.x / props.gridLength.width * 100}%)`
+          left: pos.x + CameraContext.CamX, 
+          top: pos.y + CameraContext.CamY,
+          transform: `rotate(${rotation}deg)`
         }}
-          
         ref={objectElement}
-        className="object"
+        className={props.className === undefined ? "split-object" : props.className + " split-object"}
         onMouseDown={onClick}
         onMouseEnter={mouseOver}
         onMouseLeave={mouseOut}
@@ -312,18 +286,9 @@ function SplitObject(props) {
       />
       {props.cb}
       {fixedView ? <FixedView 
-      src={props.src} 
-      split={true} 
-      gridLengthWidth={props.gridLength.width} 
-      gridLengthHeight={props.gridLength.height}
-      cropX={props.crop.x}
-      cropY={props.crop.y} 
-      borderRadius={objectElement.current.style.borderRadius}
-      inset={{
-        top: props.crop.y / props.gridLength.height * 100, 
-        right: 100 / props.gridLength.width * (props.gridLength.width - props.crop.x - 1),
-        bottom: 100 / props.gridLength.height * (props.gridLength.height - props.crop.y - 1),
-        left: props.crop.x / props.gridLength.width * 100}}/> : null}
+      src={src} 
+      borderRadius={objectElement.current.style.borderRadius}/>
+       : null}
     </>
   );
 }

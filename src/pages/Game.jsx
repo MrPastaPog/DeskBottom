@@ -8,6 +8,7 @@ import makeid from "../makeid";
 import SplitObject from "./components/SplitObject";
 import ObjectsTouching from "../ObjectsTouching";
 import InsertItemToIndex from "../InsertItemToIndex";
+
 export const Camera = createContext();
 
 function Game() {
@@ -20,8 +21,6 @@ function Game() {
   const middleClick = useRef(false);
 
 
-
-
   function RenderJson(json) {
     json.map(jsonObject => {
       let ComponentJsx;
@@ -31,7 +30,7 @@ function Game() {
           ComponentJsx = <Object
           pos={jsonObject.pos || {x: 0, y: 0}}
           src={jsonObject.src} 
-          backsrc={jsonObject.backsrc} 
+          backSrc={jsonObject.backSrc} 
           scale={jsonObject.scale}
           size={jsonObject.size || {width: 0, height: 0}}
           rotation={jsonObject.rotation}
@@ -75,15 +74,15 @@ function Game() {
           ComponentJsx = <SplitObject 
           pos={jsonObject.pos || {x: 0 , y: 0}}
           src={jsonObject.src} 
-          backsrc={jsonObject.backsrc} 
+          backSrc={jsonObject.backSrc} 
           backsplit={jsonObject.backsplit || false}
           scale={jsonObject.scale}
           size={jsonObject.size || {width: 0, height: 0}}
           rotation={jsonObject.rotation}
-          id={id}
           locked={jsonObject.locked}
           side={jsonObject.side}
           layer={jsonObject.layer}
+          id={id}
           key={id}
           gridLength={jsonObject.gridLength || {width: 1, height: 1}}
           crop={jsonObject.crop || {x: 0, y: 0}}
@@ -97,6 +96,7 @@ function Game() {
   function getTouchingObjectIndices(prevTable, objectIndex, id) {
     let touchingIndices = [];
     prevTable.forEach((prevObject) => {
+      console.log(prevObject.props.id)
       if (prevObject.props.id === id) {touchingIndices.push(objectIndex); return;}
       if (ObjectsTouching(id, prevObject.props.id, prevTable[objectIndex].props.gridLength, prevObject.props.gridLength)) {
         touchingIndices.push(prevTable.indexOf(prevObject))
@@ -108,16 +108,20 @@ function Game() {
 function moveLayer(id, direction) {
   setJsonTable(prevTable => {
     let newTable = [...prevTable];
+    console.log(newTable)
     const objectIndex = newTable.findIndex(component => component.props.id === id);
     if (objectIndex === -1) return newTable;
+    console.log('abc')
+    console.log(objectIndex)
     const touchingIndices = getTouchingObjectIndices(newTable, objectIndex, id);
+    console.log(touchingIndices)
     const touchIndex = touchingIndices.indexOf(objectIndex);
 
     if (direction === 1) {
       if (touchIndex + 1 >= touchingIndices.length) return prevTable; // Prevents out of bounds
       const movement = touchingIndices[touchIndex+1] - touchingIndices[touchIndex];
       if (objectIndex + movement >= newTable.length) return prevTable; // Prevents out of bounds
-
+      
       // Swap the elements
       [newTable[objectIndex], newTable[objectIndex+movement]] = [newTable[objectIndex+movement], newTable[objectIndex]];
 
@@ -168,6 +172,8 @@ function moveLayer(id, direction) {
   }
 
   useEffect(() => {
+    document.addEventListener('layerUp', layerUp)
+    document.addEventListener('layerDown', layerDown)
     document.addEventListener('mousedown', mouseDown)
     document.addEventListener('mousemove', mouseMove)
     document.addEventListener('mouseup', mouseUp)
@@ -175,6 +181,8 @@ function moveLayer(id, direction) {
       document.removeEventListener('mousedown', mouseDown)
       document.removeEventListener('mousemove', mouseMove)
       document.removeEventListener('mouseup', mouseUp)
+      document.removeEventListener('layerUp', layerUp)
+      document.removeEventListener('layerDown', layerDown)
     }
   })
   useEffect(() => {
@@ -183,19 +191,7 @@ function moveLayer(id, direction) {
       RenderJson(json)
     })
   }, [])
-  useEffect(() => {
-    
-    
-    
-    document.addEventListener('layerUp', layerUp)
-    document.addEventListener('layerDown', layerDown)
-    
-    return() => {
-      document.removeEventListener('layerUp', layerUp)
-      document.removeEventListener('layerDown', layerDown)
-      
-    }
-  })
+
 
   return(<>
     <Camera.Provider value={{CamX: cameraX, CamY: cameraY}}>
@@ -203,7 +199,7 @@ function moveLayer(id, direction) {
     </Camera.Provider>
     <ContextMenu /> 
     <FixedView/>
-    
+
   </>)
 }
 export default Game

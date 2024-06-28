@@ -1,4 +1,4 @@
-.object, .page-object {
+.object, .page-object, .split-object {
   -webkit-user-drag: none;
   user-select: none;
   -moz-user-select: none;
@@ -110,3 +110,6 @@ body {
   margin: 0;
 }
 
+.deck {
+  box-shadow: 10px 10px 10px gray;
+}
